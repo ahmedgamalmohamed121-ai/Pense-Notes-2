@@ -1824,7 +1824,7 @@ function stringToHash(str) {
 }
 
 // ==================== Auto Update Logic ====================
-const APP_VERSION = 'v1.1'; // Current installed version
+const APP_VERSION = 'v1.2'; // Current installed version
 const GITHUB_REPO = 'ahmedgamalmohamed121-ai/Pense-Notes-2';
 
 async function checkForUpdates() {

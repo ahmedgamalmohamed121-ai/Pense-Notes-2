@@ -41,8 +41,7 @@ jobs:
       - name: Build with Gradle
         run: |
           cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v1
