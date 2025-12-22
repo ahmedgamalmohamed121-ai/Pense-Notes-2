@@ -5,7 +5,7 @@ let currentNoteId = null;
 let notificationPermission = false;
 let currentLang = localStorage.getItem('pense_lang') || 'ar';
 let nickname = localStorage.getItem('pense_nickname') || '';
-let gender = localStorage.getItem('pense_gender') || 'male';
+let gender = localStorage.getItem('pense_gender') || ''; // Changed from 'male' to '' for unselected default
 let apiKey = '';
 
 // Capacitor Support
@@ -414,7 +414,7 @@ function loadSettings() {
     // Load Gender
     const genderInputs = document.querySelectorAll('input[name="gender"]');
     genderInputs.forEach(input => {
-        if (input.value === gender) input.checked = true;
+        input.checked = (input.value === gender);
     });
 }
 
@@ -430,7 +430,7 @@ function saveSettings() {
 function saveNickname() {
     nickname = elements.nicknameInput.value.trim();
     const selectedGender = document.querySelector('input[name="gender"]:checked');
-    gender = selectedGender ? selectedGender.value : 'male';
+    gender = selectedGender ? selectedGender.value : ''; // Changed from 'male' to '' if not selected
 
     localStorage.setItem('pense_nickname', nickname);
     localStorage.setItem('pense_gender', gender);
@@ -440,11 +440,11 @@ function saveNickname() {
 
 function resetNickname() {
     nickname = '';
-    gender = 'male';
+    gender = ''; // Changed from 'male' to '' for reset
     elements.nicknameInput.value = '';
 
-    const maleInput = document.querySelector('input[name="gender"][value="male"]');
-    if (maleInput) maleInput.checked = true;
+    const genderInputs = document.querySelectorAll('input[name="gender"]');
+    genderInputs.forEach(input => input.checked = false);
 
     localStorage.setItem('pense_nickname', nickname);
     localStorage.setItem('pense_gender', gender);
@@ -1612,8 +1612,10 @@ function getGreeting() {
 
     if (gender === 'male') {
         return `ي ${nickname} 🦇`;
-    } else {
+    } else if (gender === 'female') {
         return `ي ${nickname} 🐥`;
+    } else {
+        return `ي ${nickname}`; // Neutral greeting if no gender selected
     }
 }
 
