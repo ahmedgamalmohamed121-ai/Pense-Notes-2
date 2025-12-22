@@ -155,13 +155,6 @@ const elements = {
     resetNicknameBtn: document.getElementById('resetNicknameBtn'),
     testNotificationBtn: document.getElementById('testNotificationBtn'),
 
-    // Update Modal
-    updateModal: document.getElementById('updateModal'),
-    closeUpdateModal: document.getElementById('closeUpdateModal'),
-    newVersionText: document.getElementById('newVersionText'),
-    updateLink: document.getElementById('updateLink'),
-    skipUpdateBtn: document.getElementById('skipUpdateBtn'),
-
     // Toast
     toast: document.getElementById('toast'),
     toastMessage: document.getElementById('toastMessage'),
@@ -224,7 +217,6 @@ async function init() {
 
         // Start Core Services
         updatePrayerTimes();
-        checkForUpdates();
 
         // Precision Syncing
         setInterval(() => {
@@ -1823,75 +1815,3 @@ function stringToHash(str) {
     return Math.abs(hash);
 }
 
-// ==================== Auto Update Logic ====================
-const APP_VERSION = 'v1.7'; // Current installed version
-const GITHUB_REPO = 'ahmedgamalmohamed121-ai/Pense-Notes-2';
-
-async function checkForUpdates() {
-    if (!navigator.onLine) return; // Don't check if offline
-
-    // Check if user skipped this update specifically (session storage)
-    if (sessionStorage.getItem('pense_skip_update')) return;
-
-    try {
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
-        if (!response.ok) return;
-
-        const data = await response.json();
-        const latestVersion = data.tag_name; // e.g., "v1.1"
-
-        if (isNewerVersion(APP_VERSION, latestVersion)) {
-            showUpdateModal(latestVersion, data.assets);
-        }
-    } catch (error) {
-        console.error('Update check failed:', error);
-    }
-}
-
-function isNewerVersion(current, latest) {
-    // Remove 'v' prefix if present
-    const cleanCurrent = current.replace('v', '');
-    const cleanLatest = latest.replace('v', '');
-
-    // Simple comparison for now (assumes standard versioning x.x or x.x.x)
-    return cleanLatest.localeCompare(cleanCurrent, undefined, { numeric: true, sensitivity: 'base' }) > 0;
-}
-
-function showUpdateModal(version, assets) {
-    elements.newVersionText.textContent = version;
-
-    // Find the apk asset
-    const apkAsset = assets.find(asset => asset.name.endsWith('.apk'));
-    if (apkAsset) {
-        elements.updateLink.href = apkAsset.browser_download_url;
-
-        // Show modal
-        elements.updateModal.classList.remove('hidden');
-
-        // Setup listeners
-        elements.closeUpdateModal.addEventListener('click', () => {
-            elements.updateModal.classList.add('hidden');
-        });
-
-        elements.skipUpdateBtn.addEventListener('click', () => {
-            elements.updateModal.classList.add('hidden');
-            sessionStorage.setItem('pense_skip_update', 'true'); // Don't show again this session
-        });
-    }
-}
-
-// Helper Functions
-function playSound() {
-    if (elements.soundToggle && elements.soundToggle.checked) {
-        // Simple click sound placeholder
-    }
-}
-
-function showToast(message) {
-    if (!elements.toast) return;
-    elements.toastMessage.textContent = message;
-    elements.toast.classList.remove('hidden');
-    setTimeout(() => {
-        elements.toast.classList.add('hidden');
-    }, 3000);
-}
