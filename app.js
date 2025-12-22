@@ -1587,7 +1587,7 @@ function showNotification(note, customMessage) {
                         id: stringToHash(note.id + '_immediate'),
                         schedule: { at: new Date() },
                         channelId: 'pense_reminders',
-                        smallIcon: 'ic_stat_name',
+                        smallIcon: 'res://ic_launcher',
                         largeIcon: 'res://ic_launcher'
                     }]
                 });
