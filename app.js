@@ -1815,3 +1815,185 @@ function stringToHash(str) {
     return Math.abs(hash);
 }
 
+// ==================== Quran Section ====================
+const quranData = {
+    surahs: [],
+    currentSurah: null
+};
+
+// Initialize Quran section when tab is clicked
+document.addEventListener('DOMContentLoaded', () => {
+    const quranTab = document.querySelector('[data-tab="quran"]');
+    if (quranTab) {
+        quranTab.addEventListener('click', initQuranSection);
+    }
+
+    // Search functionality
+    const quranSearchInput = document.getElementById('quranSearchInput');
+    if (quranSearchInput) {
+        quranSearchInput.addEventListener('input', filterSurahs);
+    }
+
+    // Back to surah list
+    const backToSurahList = document.getElementById('backToSurahList');
+    if (backToSurahList) {
+        backToSurahList.addEventListener('click', showSurahList);
+    }
+});
+
+async function initQuranSection() {
+    if (quranData.surahs.length === 0) {
+        await loadSurahsList();
+    }
+}
+
+async function loadSurahsList() {
+    const surahList = document.getElementById('surahList');
+    if (!surahList) return;
+
+    // Show loading
+    surahList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        // Using Al-Quran Cloud API - a trusted and free Quran API
+        const response = await fetch('https://api.alquran.cloud/v1/surah');
+        const data = await response.json();
+
+        if (data.code === 200 && data.data) {
+            quranData.surahs = data.data;
+            renderSurahsList(quranData.surahs);
+        } else {
+            throw new Error('Failed to load Quran data');
+        }
+    } catch (error) {
+        console.error('Error loading Quran:', error);
+        surahList.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <p>حدث خطأ في تحميل القرآن الكريم</p>
+                <button onclick="loadSurahsList()" class="btn-small" style="margin-top: 1rem;">إعادة المحاولة</button>
+            </div>
+        `;
+    }
+}
+
+function renderSurahsList(surahs) {
+    const surahList = document.getElementById('surahList');
+    if (!surahList) return;
+
+    surahList.innerHTML = surahs.map(surah => `
+        <div class="surah-card" onclick="loadSurah(${surah.number})">
+            <div class="surah-number">${surah.number}</div>
+            <div class="surah-info">
+                <div class="surah-name-ar">${surah.name}</div>
+                <div class="surah-details">
+                    <span>${surah.englishName}</span>
+                    <span>•</span>
+                    <span>${surah.numberOfAyahs} آية</span>
+                    <span>•</span>
+                    <span>${surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterSurahs() {
+    const searchInput = document.getElementById('quranSearchInput');
+    if (!searchInput) return;
+
+    const searchTerm = searchInput.value.trim().toLowerCase();
+
+    if (!searchTerm) {
+        renderSurahsList(quranData.surahs);
+        return;
+    }
+
+    const filtered = quranData.surahs.filter(surah =>
+        surah.name.toLowerCase().includes(searchTerm) ||
+        surah.englishName.toLowerCase().includes(searchTerm) ||
+        surah.englishNameTranslation.toLowerCase().includes(searchTerm) ||
+        surah.number.toString().includes(searchTerm)
+    );
+
+    renderSurahsList(filtered);
+}
+
+async function loadSurah(surahNumber) {
+    const surahListView = document.getElementById('surahListView');
+    const surahReaderView = document.getElementById('surahReaderView');
+    const ayatContainer = document.getElementById('ayatContainer');
+
+    if (!surahListView || !surahReaderView || !ayatContainer) return;
+
+    // Show loading
+    surahReaderView.classList.remove('hidden');
+    surahListView.classList.add('hidden');
+    ayatContainer.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        // Load Surah with Arabic text (Uthmani script)
+        const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}`);
+        const data = await response.json();
+
+        if (data.code === 200 && data.data) {
+            quranData.currentSurah = data.data;
+            renderSurah(data.data);
+        } else {
+            throw new Error('Failed to load Surah');
+        }
+    } catch (error) {
+        console.error('Error loading Surah:', error);
+        ayatContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <p>حدث خطأ في تحميل السورة</p>
+                <button onclick="showSurahList()" class="btn-small" style="margin-top: 1rem;">العودة للقائمة</button>
+            </div>
+        `;
+    }
+}
+
+function renderSurah(surah) {
+    const surahName = document.getElementById('surahName');
+    const surahInfo = document.getElementById('surahInfo');
+    const ayatContainer = document.getElementById('ayatContainer');
+
+    if (!surahName || !surahInfo || !ayatContainer) return;
+
+    // Update header
+    surahName.textContent = surah.name;
+    surahInfo.textContent = `${surah.englishName} • ${surah.numberOfAyahs} آية • ${surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}`;
+
+    // Render Ayat
+    let ayatHTML = '';
+
+    // Add Bismillah for all surahs except Al-Fatiha and At-Tawbah
+    if (surah.number !== 1 && surah.number !== 9) {
+        ayatHTML += `
+            <div class="ayah-card" style="text-align: center; background: var(--gradient-primary); color: white;">
+                <div class="ayah-text" style="font-size: 2rem;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+            </div>
+        `;
+    }
+
+    ayatHTML += surah.ayahs.map(ayah => `
+        <div class="ayah-card">
+            <div class="ayah-number">${ayah.numberInSurah}</div>
+            <div class="ayah-text">${ayah.text}</div>
+        </div>
+    `).join('');
+
+    ayatContainer.innerHTML = ayatHTML;
+
+    // Scroll to top
+    ayatContainer.scrollTop = 0;
+}
+
+function showSurahList() {
+    const surahListView = document.getElementById('surahListView');
+    const surahReaderView = document.getElementById('surahReaderView');
+
+    if (surahListView && surahReaderView) {
+        surahListView.classList.remove('hidden');
+        surahReaderView.classList.add('hidden');
+    }
+}
