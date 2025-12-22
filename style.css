@@ -2188,41 +2188,32 @@ body {
     gap: var(--spacing-lg);
 }
 
-.ayah-card {
+/* Continuous Quran Text */
+.quran-text-container {
     background: var(--bg-tertiary);
-    padding: var(--spacing-xl);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-base);
-}
-
-.ayah-card:hover {
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
-    transform: translateX(-5px);
 }
 
-.ayah-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 50%;
-    font-weight: 800;
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-md);
-}
-
-.ayah-text {
-    font-size: 1.8rem;
-    line-height: 2.5;
+.quran-continuous-text {
+    font-size: 2rem;
+    line-height: 2.8;
     color: var(--text-primary);
     font-family: 'Cairo', 'Tajawal', serif;
     font-weight: 600;
-    text-align: right;
+    text-align: justify;
     direction: rtl;
+    word-spacing: 0.3rem;
+}
+
+.ayah-number-inline {
+    display: inline-block;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0.3rem;
+    vertical-align: middle;
 }
 
 .back-link {

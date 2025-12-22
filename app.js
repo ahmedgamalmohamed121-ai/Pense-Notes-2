@@ -1963,29 +1963,36 @@ function renderSurah(surah) {
     surahName.textContent = surah.name;
     surahInfo.textContent = `${surah.englishName} • ${surah.numberOfAyahs} آية • ${surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}`;
 
-    // Render Ayat
-    let ayatHTML = '';
+    // Build continuous Quranic text
+    let quranText = '';
 
     // Add Bismillah for all surahs except Al-Fatiha and At-Tawbah
     if (surah.number !== 1 && surah.number !== 9) {
-        ayatHTML += `
-            <div class="ayah-card" style="text-align: center; background: var(--gradient-primary); color: white;">
-                <div class="ayah-text" style="font-size: 2rem;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-            </div>
-        `;
+        quranText = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ ';
     }
 
-    ayatHTML += surah.ayahs.map(ayah => `
-        <div class="ayah-card">
-            <div class="ayah-number">${ayah.numberInSurah}</div>
-            <div class="ayah-text">${ayah.text}</div>
-        </div>
-    `).join('');
+    // Build continuous text with ayah numbers
+    surah.ayahs.forEach((ayah, index) => {
+        quranText += ayah.text + ' ';
+        // Add ayah number in Arabic-Indic numerals with decorative circle
+        quranText += `<span class="ayah-number-inline">﴿${convertToArabicNumerals(ayah.numberInSurah)}﴾</span> `;
+    });
 
-    ayatContainer.innerHTML = ayatHTML;
+    // Render in single container
+    ayatContainer.innerHTML = `
+        <div class="quran-text-container">
+            <div class="quran-continuous-text">${quranText}</div>
+        </div>
+    `;
 
     // Scroll to top
     ayatContainer.scrollTop = 0;
+}
+
+// Convert numbers to Arabic-Indic numerals
+function convertToArabicNumerals(num) {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return num.toString().split('').map(digit => arabicNumerals[parseInt(digit)]).join('');
 }
 
 function showSurahList() {
