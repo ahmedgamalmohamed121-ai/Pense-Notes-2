@@ -35,11 +35,15 @@ jobs:
       - name: Capacitor Sync
         run: npx cap sync android
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 7.6
+
       - name: Build with Gradle
         run: |
           cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          gradle assembleDebug --stacktrace --no-daemon
 
       - name: Create Release and Upload APK
         uses: softprops/action-gh-release@v1

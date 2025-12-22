@@ -13,7 +13,7 @@
     "@capacitor/cli": "^6.0.0"
   },
   "scripts": {
-    "build": "echo 'No build step required for static site' && mkdir -p www && cp *.html style.css app.js www/",
+    "build": "mkdir -p www && cp index.html style.css app.js icon.png splash.png www/ || true",
     "sync": "npx cap sync"
   }
 }
