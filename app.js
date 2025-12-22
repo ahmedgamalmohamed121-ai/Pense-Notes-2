@@ -139,14 +139,6 @@ const elements = {
     cancelBtn: document.getElementById('cancelBtn'),
     saveBtn: document.getElementById('saveBtn'),
 
-    // Assistant
-    assistantToggle: document.getElementById('assistantToggle'),
-    assistantModal: document.getElementById('assistantModal'),
-    closeAssistantModal: document.getElementById('closeAssistantModal'),
-    chatContainer: document.getElementById('chatContainer'),
-    assistantInput: document.getElementById('assistantInput'),
-    sendAssistantBtn: document.getElementById('sendAssistantBtn'),
-
     // Settings Modal
     settingsModal: document.getElementById('settingsModal'),
     settingsTitle: document.querySelector('.modal-small h2'),
@@ -535,23 +527,12 @@ function setupEventListeners() {
         });
     }
 
-    // Assistant
-    elements.assistantToggle.addEventListener('click', openAssistant);
-    elements.closeAssistantModal.addEventListener('click', closeAssistant);
-    elements.sendAssistantBtn.addEventListener('click', handleAssistantMessage);
-    elements.assistantInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleAssistantMessage();
-    });
-
     // Close modals on overlay click
     elements.noteModal.addEventListener('click', (e) => {
         if (e.target === elements.noteModal) closeNoteModal();
     });
     elements.settingsModal.addEventListener('click', (e) => {
         if (e.target === elements.settingsModal) closeSettingsModal();
-    });
-    elements.assistantModal.addEventListener('click', (e) => {
-        if (e.target === elements.assistantModal) closeAssistant();
     });
 
     // Keyboard shortcuts
