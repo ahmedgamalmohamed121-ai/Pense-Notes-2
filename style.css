@@ -2061,3 +2061,81 @@ body {
     box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
     transform: translateY(-2px);
 }
+
+/* ==================== Footer ==================== */
+.app-footer {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--spacing-2xl);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.heart {
+    color: #e74c3c;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.designer-name {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* ==================== Floating Action Button ==================== */
+.fab {
+    position: fixed;
+    bottom: 90px;
+    /* رفع الزر فوق الـ footer */
+    right: var(--spacing-xl);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    z-index: 50;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 25px rgba(79, 70, 229, 0.6);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .fab {
+        bottom: 80px;
+        right: var(--spacing-md);
+        width: 56px;
+        height: 56px;
+    }
+
+    .app-footer {
+        padding: var(--spacing-md);
+        font-size: 0.85rem;
+    }
+}
