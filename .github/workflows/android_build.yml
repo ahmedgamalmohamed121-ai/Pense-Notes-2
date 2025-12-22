@@ -37,19 +37,14 @@ jobs:
           fi
           npx cap sync android
 
-      - name: Update Gradle Wrapper
+      - name: Generate Gradle Wrapper
         run: |
-          cd android/gradle/wrapper
-          echo "distributionBase=GRADLE_USER_HOME" > gradle-wrapper.properties
-          echo "distributionPath=wrapper/dists" >> gradle-wrapper.properties
-          echo "zipStoreBase=GRADLE_USER_HOME" >> gradle-wrapper.properties
-          echo "zipStorePath=wrapper/dists" >> gradle-wrapper.properties
-          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.0.2-bin.zip" >> gradle-wrapper.properties
+          cd android
+          gradle wrapper --gradle-version 8.0.2
 
       - name: Build with Gradle
         run: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Create Release and Upload APK
