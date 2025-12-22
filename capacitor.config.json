@@ -1,0 +1,14 @@
+{
+    "appId": "com.pense.notes",
+    "appName": "Pensè",
+    "webDir": "www",
+    "bundledWebRuntime": false,
+    "plugins": {
+        "SplashScreen": {
+            "launchShowDuration": 2000,
+            "backgroundColor": "#0f172a",
+            "showSpinner": false,
+            "androidScaleType": "CENTER_CROP"
+        }
+    }
+}

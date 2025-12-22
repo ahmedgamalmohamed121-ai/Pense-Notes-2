@@ -1,0 +1,12 @@
+node_modules/
+.gradle/
+build/
+capacitor-cordova-android-plugins/
+app/build/
+.idea/
+*.iml
+local.properties
+.DS_Store
+www/
+dist/
+.capacitor/
