@@ -1587,7 +1587,7 @@ function showNotification(note, customMessage) {
                         id: stringToHash(note.id + '_immediate'),
                         schedule: { at: new Date() },
                         channelId: 'pense_reminders',
-                        smallIcon: 'res://ic_launcher',
+                        smallIcon: 'ic_stat_name',
                         largeIcon: 'res://ic_launcher'
                     }]
                 });
@@ -1648,14 +1648,14 @@ function playSound() {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = 800;
+    oscillator.frequency.value = 400; // Lower frequency for a softer sound
     oscillator.type = 'sine';
 
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
 
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
+    oscillator.stop(audioContext.currentTime + 0.2);
 }
 
 function handleKeyboardShortcuts(e) {

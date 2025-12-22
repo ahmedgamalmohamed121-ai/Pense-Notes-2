@@ -63,6 +63,7 @@ body.dark-mode {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -424,6 +425,15 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow-x: auto;
+}
+
+.hub-tab,
+.adhkar-cat,
+.tasbih-btn,
+.big-counter-btn,
+.btn {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 .hub-tab {
@@ -1737,6 +1747,15 @@ body {
         margin-bottom: var(--spacing-md);
     }
 
+    .hub-tab,
+    .adhkar-cat,
+    .tasbih-btn,
+    .big-counter-btn,
+    .btn {
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+    }
+
     .hub-tab {
         padding: 10px 4px;
         font-size: 0.8rem;
@@ -1754,9 +1773,9 @@ body {
     }
 
     .dhikr-card {
-        padding: var(--spacing-md);
-        margin: 0;
-        width: 100%;
+        padding: 12px 16px;
+        margin: 0 4px var(--spacing-sm) 4px;
+        width: calc(100% - 8px);
     }
 
     .dhikr-text {
@@ -1800,7 +1819,8 @@ body {
 
     .religious-hub {
         width: 100%;
-        padding: 0;
+        padding: 0 4px;
+        overflow-x: hidden;
     }
 
     .dhikr-card {
