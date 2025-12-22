@@ -2013,55 +2013,6 @@ body {
 
 }
 
-/* Update Modal */
-.update-info {
-    text-align: center;
-    padding: var(--spacing-lg);
-}
-
-.update-icon {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-md);
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-}
-
-.update-version {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
-    font-family: inherit;
-    direction: ltr;
-    /* Ensure version looks correct */
-}
-
-.update-actions {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-xl);
-}
-
-.btn-update {
-    background: var(--gradient-primary);
-    color: white;
-    width: 100%;
-    padding: var(--spacing-md);
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-update:hover {
-    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-    transform: translateY(-2px);
-}
-
 /* ==================== Assistant (Bot) UI ==================== */
 .assistant-fab {
     position: fixed;
