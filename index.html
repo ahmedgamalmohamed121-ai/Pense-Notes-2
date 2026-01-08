@@ -230,7 +230,16 @@
                 <div class="hub-content hidden" id="prayer-times-section">
                     <div class="prayer-container">
                         <div class="prayer-header-info">
-                            <h2 id="currentLocation">مواقيت الصلاة - القاهرة</h2>
+                            <div class="location-row">
+                                <h2 id="currentLocation">مواقيت الصلاة - القاهرة</h2>
+                                <button class="icon-btn-small" id="refreshLocation" title="تحديث الموقع">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path
+                                            d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                                    </svg>
+                                </button>
+                            </div>
                             <p id="currentHijriDate"></p>
                         </div>
                         <div class="prayer-times-grid" id="prayerTimesGrid">
@@ -433,6 +442,28 @@
 
                 <div class="setting-item">
                     <div class="setting-info">
+                        <h3>معايرة مواقيت الصلاة</h3>
+                        <p>إضافة/إنقاص دقائق للمواقيت</p>
+                    </div>
+                    <div class="setting-controls">
+                        <select id="prayerOffsetInput" class="select-small" style="width: 100px;">
+                            <option value="-5">-5 دقائق</option>
+                            <option value="-4">-4 دقائق</option>
+                            <option value="-3">-3 دقائق</option>
+                            <option value="-2">-2 دقيقتين</option>
+                            <option value="-1">-1 دقيقة</option>
+                            <option value="0" selected>0 (الافتراضي)</option>
+                            <option value="1">+1 دقيقة</option>
+                            <option value="2">+2 دقيقتين</option>
+                            <option value="3">+3 دقائق</option>
+                            <option value="4">+4 دقائق</option>
+                            <option value="5">+5 دقائق</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
                         <h3>الصوت</h3>
                         <p>تشغيل الأصوات</p>
                     </div>
@@ -490,6 +521,7 @@
     </footer>
 
     <script src="capacitor.js"></script>
+    <script src="assistant.js"></script>
     <script src="app.js"></script>
 </body>
 

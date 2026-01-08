@@ -5,7 +5,7 @@ let currentNoteId = null;
 let notificationPermission = false;
 let currentLang = localStorage.getItem('pense_lang') || 'ar';
 let nickname = localStorage.getItem('pense_nickname') || '';
-let gender = localStorage.getItem('pense_gender') || 'male';
+let gender = localStorage.getItem('pense_gender') || ''; // Changed from 'male' to '' for unselected default
 let apiKey = '';
 
 // Capacitor Support
@@ -184,9 +184,12 @@ const elements = {
 
     // Prayer Times
     prayerTimesGrid: document.getElementById('prayerTimesGrid'),
+    currentLocation: document.getElementById('currentLocation'),
+    refreshLocation: document.getElementById('refreshLocation'),
     currentHijriDate: document.getElementById('currentHijriDate'),
     nextPrayerMessage: document.getElementById('nextPrayerMessage'),
-    prayerAdhanToggle: document.getElementById('prayerAdhanToggle')
+    prayerAdhanToggle: document.getElementById('prayerAdhanToggle'),
+    prayerOffsetInput: document.getElementById('prayerOffsetInput')
 };
 
 // ==================== Religious Data ====================
@@ -194,6 +197,8 @@ let tasbihCount = 0;
 let prayerTimes = {};
 let lastNotifiedPrayer = '';
 let lastPreNotifiedPrayer = '';
+let userCoords = JSON.parse(localStorage.getItem('pense_coords')) || null;
+let prayerOffset = parseInt(localStorage.getItem('pense_prayer_offset')) || 0; // Calibration in minutes
 
 // ==================== Initialization ====================
 async function init() {
@@ -406,6 +411,10 @@ function loadSettings() {
         elements.soundToggle.checked = sound === 'true';
     }
 
+    if (elements.prayerOffsetInput) {
+        elements.prayerOffsetInput.value = prayerOffset;
+    }
+
     if (elements.nicknameInput) {
         elements.nicknameInput.value = nickname;
     }
@@ -414,7 +423,7 @@ function loadSettings() {
     // Load Gender
     const genderInputs = document.querySelectorAll('input[name="gender"]');
     genderInputs.forEach(input => {
-        if (input.value === gender) input.checked = true;
+        input.checked = (input.value === gender);
     });
 }
 
@@ -424,13 +433,22 @@ function saveSettings() {
     localStorage.setItem('pense_autoBackup', elements.autoBackupToggle.checked);
     localStorage.setItem('pense_sound', elements.soundToggle.checked);
 
+    if (elements.prayerOffsetInput) {
+        const newOffset = parseInt(elements.prayerOffsetInput.value);
+        if (newOffset !== prayerOffset) {
+            prayerOffset = newOffset;
+            localStorage.setItem('pense_prayer_offset', prayerOffset);
+            updatePrayerTimes(); // Refresh times with new offset
+        }
+    }
+
     // Nickname and gender are saved via their own button now
 }
 
 function saveNickname() {
     nickname = elements.nicknameInput.value.trim();
     const selectedGender = document.querySelector('input[name="gender"]:checked');
-    gender = selectedGender ? selectedGender.value : 'male';
+    gender = selectedGender ? selectedGender.value : ''; // Changed from 'male' to '' if not selected
 
     localStorage.setItem('pense_nickname', nickname);
     localStorage.setItem('pense_gender', gender);
@@ -440,11 +458,11 @@ function saveNickname() {
 
 function resetNickname() {
     nickname = '';
-    gender = 'male';
+    gender = ''; // Changed from 'male' to '' for reset
     elements.nicknameInput.value = '';
 
-    const maleInput = document.querySelector('input[name="gender"][value="male"]');
-    if (maleInput) maleInput.checked = true;
+    const genderInputs = document.querySelectorAll('input[name="gender"]');
+    genderInputs.forEach(input => input.checked = false);
 
     localStorage.setItem('pense_nickname', nickname);
     localStorage.setItem('pense_gender', gender);
@@ -518,6 +536,10 @@ function setupEventListeners() {
 
     elements.backToAdhkarList.addEventListener('click', closeFocusedAdkar);
     elements.focusedCounterBtn.addEventListener('click', decrementFocusedDhikr);
+
+    if (elements.refreshLocation) {
+        elements.refreshLocation.addEventListener('click', () => updatePrayerTimes(true));
+    }
 
     // Prayer Sound Select (Preview Always)
     const soundSelect = document.getElementById('prayerSoundSelect');
@@ -825,38 +847,100 @@ function decrementFocusedDhikr() {
 }
 
 // Prayer Times Functions
-async function updatePrayerTimes() {
+async function updatePrayerTimes(forceRefresh = false) {
     try {
-        let url = 'https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5';
+        console.log('Updating prayer times...');
+        let lat, lon;
 
-        // Try to get dynamic location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
-                url = `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=5`;
-                await fetchAndRenderPrayer(url);
-            }, async (error) => {
-                console.warn('Geolocation failed, defaulting to Cairo:', error);
-                await fetchAndRenderPrayer(url);
-            });
-        } else {
-            await fetchAndRenderPrayer(url);
+        if (forceRefresh || !userCoords) {
+            if (isCapacitor) {
+                const geo = Capacitor.Plugins.Geolocation;
+                if (geo) {
+                    try {
+                        const position = await geo.getCurrentPosition({
+                            enableHighAccuracy: true,
+                            timeout: 10000
+                        });
+                        lat = position.coords.latitude;
+                        lon = position.coords.longitude;
+                        userCoords = { lat, lon };
+                        localStorage.setItem('pense_coords', JSON.stringify(userCoords));
+                        console.log('Location updated via Capacitor:', userCoords);
+                        showToast('تم تحديث الموقع بنجاح');
+                    } catch (e) {
+                        console.error('Capacitor Geolocation failed:', e);
+                        // Fallback to saved or Cairo
+                    }
+                }
+            } else if (navigator.geolocation) {
+                // Browser fallback
+                navigator.geolocation.getCurrentPosition((position) => {
+                    lat = position.coords.latitude;
+                    lon = position.coords.longitude;
+                    userCoords = { lat, lon };
+                    localStorage.setItem('pense_coords', JSON.stringify(userCoords));
+                    updatePrayerTimes(false); // Re-run with new coords
+                }, (err) => {
+                    console.warn('Browser geolocation failed:', err);
+                });
+            }
         }
+
+        lat = lat || (userCoords ? userCoords.lat : null);
+        lon = lon || (userCoords ? userCoords.lon : null);
+
+        let url = 'https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5';
+        if (lat && lon) {
+            url = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`;
+
+            // Reverse Geocoding for City Name (Optional, using Aladhan's meta if available or simple label)
+            if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - موقعك الحالي';
+        } else {
+            if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - القاهرة (افتراضي)';
+        }
+
+        await fetchAndRenderPrayer(url);
     } catch (error) {
         console.error('Error fetching prayer times:', error);
     }
 }
 
 async function fetchAndRenderPrayer(url) {
-    const response = await fetch(url);
-    const data = await response.json();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    if (data.code === 200) {
-        prayerTimes = data.data.timings;
-        elements.currentHijriDate.textContent = `${data.data.date.hijri.day} ${data.data.date.hijri.month.ar} ${data.data.date.hijri.year} هـ`;
-        renderPrayerTimes();
-        if (isCapacitor) schedulePrayerNotifications(prayerTimes);
+        if (data.code === 200) {
+            prayerTimes = data.data.timings;
+            // Apply Offset Adjustment
+            if (prayerOffset !== 0) {
+                for (let key in prayerTimes) {
+                    if (['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(key)) {
+                        prayerTimes[key] = adjustTime(prayerTimes[key], prayerOffset);
+                    }
+                }
+            }
+
+            elements.currentHijriDate.textContent = `${data.data.date.hijri.day} ${data.data.date.hijri.month.ar} ${data.data.date.hijri.year} هـ`;
+            renderPrayerTimes();
+            if (isCapacitor) schedulePrayerNotifications(prayerTimes);
+        }
+    } catch (e) {
+        console.error('Fetch error:', e);
     }
+}
+
+function adjustTime(timeStr, offsetMins) {
+    if (!timeStr) return timeStr;
+    const [h, m] = timeStr.split(':').map(Number);
+    let totalMins = h * 60 + m + offsetMins;
+
+    // Wrap around 24 hours
+    totalMins = (totalMins + 1440) % 1440;
+
+    const newH = Math.floor(totalMins / 60);
+    const newM = totalMins % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
 function renderPrayerTimes() {
@@ -1612,8 +1696,10 @@ function getGreeting() {
 
     if (gender === 'male') {
         return `ي ${nickname} 🦇`;
-    } else {
+    } else if (gender === 'female') {
         return `ي ${nickname} 🐥`;
+    } else {
+        return `ي ${nickname}`; // Neutral greeting if no gender selected
     }
 }
 
@@ -1648,14 +1734,14 @@ function playSound() {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = 800;
+    oscillator.frequency.value = 400; // Lower frequency for a softer sound
     oscillator.type = 'sine';
 
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
 
     oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
+    oscillator.stop(audioContext.currentTime + 0.2);
 }
 
 function handleKeyboardShortcuts(e) {

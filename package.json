@@ -1,19 +1,20 @@
 {
   "name": "pense-notes",
-  "version": "1.0.0",
-  "description": "Smart Notes and Reminders App",
+  "version": "1.1.0",
+  "description": "Smart Notes and Reminders App with Accurate Prayer Times",
   "main": "index.html",
   "dependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/app": "^6.0.0",
     "@capacitor/core": "^6.0.0",
+    "@capacitor/geolocation": "^6.0.0",
     "@capacitor/local-notifications": "^6.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.0.0"
   },
   "scripts": {
-    "build": "mkdir -p www && cp index.html style.css app.js icon.png splash.png www/ || true",
+    "build": "npx -y shx mkdir -p www && npx -y shx cp index.html style.css app.js assistant.js icon.png splash.png www/",
     "sync": "npx cap sync"
   }
 }

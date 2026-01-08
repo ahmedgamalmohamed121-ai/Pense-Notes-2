@@ -63,6 +63,19 @@ body.dark-mode {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+.back-to-main,
+.back-link,
+.hub-tab,
+.adhkar-cat,
+.tasbih-btn,
+.big-counter-btn,
+.btn,
+.icon-btn {
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 body {
@@ -398,21 +411,26 @@ body {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
     padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--radius-lg);
-    color: var(--primary-color);
+    color: white;
     font-weight: 700;
     cursor: pointer;
-    transition: all var(--transition-fast);
     font-family: 'Cairo', sans-serif;
 }
 
-.back-to-main:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateX(-5px);
+@media (hover: hover) {
+    .back-to-main:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+    }
+}
+
+.back-to-main:active {
+    transform: scale(0.98);
+    opacity: 0.9;
 }
 
 .hub-nav {
@@ -424,6 +442,15 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow-x: auto;
+}
+
+.hub-tab,
+.adhkar-cat,
+.tasbih-btn,
+.big-counter-btn,
+.btn {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 .hub-tab {
@@ -650,6 +677,34 @@ body {
     font-weight: 800;
     margin-bottom: var(--spacing-xs);
     color: var(--primary-color);
+}
+
+.location-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.icon-btn-small {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.icon-btn-small:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: rotate(180deg);
 }
 
 .prayer-header-info p {
@@ -1392,6 +1447,25 @@ body {
     box-shadow: 0 6px 12px rgba(37, 211, 102, 0.3);
 }
 
+.facebook-btn {
+    background-color: #1877F2;
+    color: white;
+    box-shadow: 0 4px 6px rgba(24, 119, 242, 0.2);
+}
+
+.facebook-btn:hover {
+    background-color: #166fe5;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(24, 119, 242, 0.3);
+}
+
+.contact-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .settings-content {
     padding: var(--spacing-xl);
 }
@@ -1737,11 +1811,26 @@ body {
         margin-bottom: var(--spacing-md);
     }
 
+    .hub-tab,
+    .adhkar-cat,
+    .tasbih-btn,
+    .big-counter-btn,
+    .btn,
+    .back-to-main,
+    .back-link {
+        -webkit-tap-highlight-color: transparent !important;
+        outline: none;
+    }
+
     .hub-tab {
-        padding: 10px 4px;
+        padding: 10px 8px;
+        /* Increased from 4px to avoid text touching edge */
         font-size: 0.8rem;
         flex: 1;
         min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .adhkar-categories {
@@ -1751,16 +1840,6 @@ body {
     .adhkar-cat {
         padding: 6px 12px;
         font-size: 0.85rem;
-    }
-
-    .dhikr-card {
-        padding: var(--spacing-md);
-        margin: 0;
-        width: 100%;
-    }
-
-    .dhikr-text {
-        font-size: 0.95rem;
     }
 
     .focused-adkar {
@@ -1801,12 +1880,30 @@ body {
     .religious-hub {
         width: 100%;
         padding: 0;
+        overflow: visible;
+        /* Allow content to use full space */
+    }
+
+    .hub-nav {
+        padding: 6px;
+        gap: 6px;
+        margin-bottom: var(--spacing-md);
+        width: 100%;
     }
 
     .dhikr-card {
-        margin: 0 0 var(--spacing-sm) 0;
+        padding: 18px 15px;
+        /* More padding for legibility */
+        margin: 0 0 var(--spacing-md) 0;
         width: 100%;
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
+        box-sizing: border-box;
+    }
+
+    .dhikr-text {
+        font-size: 1.05rem;
+        /* Slightly larger text */
+        line-height: 1.7;
     }
 
     /* Settings Modal Mobile Fixes */

@@ -184,9 +184,12 @@ const elements = {
 
     // Prayer Times
     prayerTimesGrid: document.getElementById('prayerTimesGrid'),
+    currentLocation: document.getElementById('currentLocation'),
+    refreshLocation: document.getElementById('refreshLocation'),
     currentHijriDate: document.getElementById('currentHijriDate'),
     nextPrayerMessage: document.getElementById('nextPrayerMessage'),
-    prayerAdhanToggle: document.getElementById('prayerAdhanToggle')
+    prayerAdhanToggle: document.getElementById('prayerAdhanToggle'),
+    prayerOffsetInput: document.getElementById('prayerOffsetInput')
 };
 
 // ==================== Religious Data ====================
@@ -194,6 +197,8 @@ let tasbihCount = 0;
 let prayerTimes = {};
 let lastNotifiedPrayer = '';
 let lastPreNotifiedPrayer = '';
+let userCoords = JSON.parse(localStorage.getItem('pense_coords')) || null;
+let prayerOffset = parseInt(localStorage.getItem('pense_prayer_offset')) || 0; // Calibration in minutes
 
 // ==================== Initialization ====================
 async function init() {
@@ -406,6 +411,10 @@ function loadSettings() {
         elements.soundToggle.checked = sound === 'true';
     }
 
+    if (elements.prayerOffsetInput) {
+        elements.prayerOffsetInput.value = prayerOffset;
+    }
+
     if (elements.nicknameInput) {
         elements.nicknameInput.value = nickname;
     }
@@ -423,6 +432,15 @@ function saveSettings() {
     localStorage.setItem('pense_notifications', elements.notificationsToggle.checked);
     localStorage.setItem('pense_autoBackup', elements.autoBackupToggle.checked);
     localStorage.setItem('pense_sound', elements.soundToggle.checked);
+
+    if (elements.prayerOffsetInput) {
+        const newOffset = parseInt(elements.prayerOffsetInput.value);
+        if (newOffset !== prayerOffset) {
+            prayerOffset = newOffset;
+            localStorage.setItem('pense_prayer_offset', prayerOffset);
+            updatePrayerTimes(); // Refresh times with new offset
+        }
+    }
 
     // Nickname and gender are saved via their own button now
 }
@@ -518,6 +536,10 @@ function setupEventListeners() {
 
     elements.backToAdhkarList.addEventListener('click', closeFocusedAdkar);
     elements.focusedCounterBtn.addEventListener('click', decrementFocusedDhikr);
+
+    if (elements.refreshLocation) {
+        elements.refreshLocation.addEventListener('click', () => updatePrayerTimes(true));
+    }
 
     // Prayer Sound Select (Preview Always)
     const soundSelect = document.getElementById('prayerSoundSelect');
@@ -825,38 +847,100 @@ function decrementFocusedDhikr() {
 }
 
 // Prayer Times Functions
-async function updatePrayerTimes() {
+async function updatePrayerTimes(forceRefresh = false) {
     try {
-        let url = 'https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5';
+        console.log('Updating prayer times...');
+        let lat, lon;
 
-        // Try to get dynamic location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const { latitude, longitude } = position.coords;
-                url = `https://api.aladhan.com/v1/timings?latitude=${latitude}&longitude=${longitude}&method=5`;
-                await fetchAndRenderPrayer(url);
-            }, async (error) => {
-                console.warn('Geolocation failed, defaulting to Cairo:', error);
-                await fetchAndRenderPrayer(url);
-            });
-        } else {
-            await fetchAndRenderPrayer(url);
+        if (forceRefresh || !userCoords) {
+            if (isCapacitor) {
+                const geo = Capacitor.Plugins.Geolocation;
+                if (geo) {
+                    try {
+                        const position = await geo.getCurrentPosition({
+                            enableHighAccuracy: true,
+                            timeout: 10000
+                        });
+                        lat = position.coords.latitude;
+                        lon = position.coords.longitude;
+                        userCoords = { lat, lon };
+                        localStorage.setItem('pense_coords', JSON.stringify(userCoords));
+                        console.log('Location updated via Capacitor:', userCoords);
+                        showToast('تم تحديث الموقع بنجاح');
+                    } catch (e) {
+                        console.error('Capacitor Geolocation failed:', e);
+                        // Fallback to saved or Cairo
+                    }
+                }
+            } else if (navigator.geolocation) {
+                // Browser fallback
+                navigator.geolocation.getCurrentPosition((position) => {
+                    lat = position.coords.latitude;
+                    lon = position.coords.longitude;
+                    userCoords = { lat, lon };
+                    localStorage.setItem('pense_coords', JSON.stringify(userCoords));
+                    updatePrayerTimes(false); // Re-run with new coords
+                }, (err) => {
+                    console.warn('Browser geolocation failed:', err);
+                });
+            }
         }
+
+        lat = lat || (userCoords ? userCoords.lat : null);
+        lon = lon || (userCoords ? userCoords.lon : null);
+
+        let url = 'https://api.aladhan.com/v1/timingsByCity?city=Cairo&country=Egypt&method=5';
+        if (lat && lon) {
+            url = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`;
+
+            // Reverse Geocoding for City Name (Optional, using Aladhan's meta if available or simple label)
+            if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - موقعك الحالي';
+        } else {
+            if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - القاهرة (افتراضي)';
+        }
+
+        await fetchAndRenderPrayer(url);
     } catch (error) {
         console.error('Error fetching prayer times:', error);
     }
 }
 
 async function fetchAndRenderPrayer(url) {
-    const response = await fetch(url);
-    const data = await response.json();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    if (data.code === 200) {
-        prayerTimes = data.data.timings;
-        elements.currentHijriDate.textContent = `${data.data.date.hijri.day} ${data.data.date.hijri.month.ar} ${data.data.date.hijri.year} هـ`;
-        renderPrayerTimes();
-        if (isCapacitor) schedulePrayerNotifications(prayerTimes);
+        if (data.code === 200) {
+            prayerTimes = data.data.timings;
+            // Apply Offset Adjustment
+            if (prayerOffset !== 0) {
+                for (let key in prayerTimes) {
+                    if (['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(key)) {
+                        prayerTimes[key] = adjustTime(prayerTimes[key], prayerOffset);
+                    }
+                }
+            }
+
+            elements.currentHijriDate.textContent = `${data.data.date.hijri.day} ${data.data.date.hijri.month.ar} ${data.data.date.hijri.year} هـ`;
+            renderPrayerTimes();
+            if (isCapacitor) schedulePrayerNotifications(prayerTimes);
+        }
+    } catch (e) {
+        console.error('Fetch error:', e);
     }
+}
+
+function adjustTime(timeStr, offsetMins) {
+    if (!timeStr) return timeStr;
+    const [h, m] = timeStr.split(':').map(Number);
+    let totalMins = h * 60 + m + offsetMins;
+
+    // Wrap around 24 hours
+    totalMins = (totalMins + 1440) % 1440;
+
+    const newH = Math.floor(totalMins / 60);
+    const newM = totalMins % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
 
 function renderPrayerTimes() {
