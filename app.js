@@ -893,8 +893,8 @@ async function updatePrayerTimes(forceRefresh = false) {
         if (lat && lon) {
             url = `https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=5`;
 
-            // Reverse Geocoding for City Name (Optional, using Aladhan's meta if available or simple label)
-            if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - موقعك الحالي';
+            // Fetch City Name via Reverse Geocoding
+            fetchCityName(lat, lon);
         } else {
             if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - القاهرة (افتراضي)';
         }
@@ -902,6 +902,20 @@ async function updatePrayerTimes(forceRefresh = false) {
         await fetchAndRenderPrayer(url);
     } catch (error) {
         console.error('Error fetching prayer times:', error);
+    }
+}
+
+async function fetchCityName(lat, lon) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
+        const data = await response.json();
+        if (data && data.address) {
+            const city = data.address.city || data.address.town || data.address.village || data.address.state || 'موقعك الحالي';
+            if (elements.currentLocation) elements.currentLocation.textContent = `مواقيت الصلاة - ${city}`;
+        }
+    } catch (e) {
+        console.error('City name fetch failed:', e);
+        if (elements.currentLocation) elements.currentLocation.textContent = 'مواقيت الصلاة - موقعك الحالي';
     }
 }
 
@@ -945,36 +959,41 @@ function adjustTime(timeStr, offsetMins) {
 
 function renderPrayerTimes() {
     const prayers = [
-        { id: 'fajr', key: 'Fajr', name: 'الفجر' },
-        { id: 'sunrise', key: 'Sunrise', name: 'الشروق' },
-        { id: 'dhuhr', key: 'Dhuhr', name: 'الظهر' },
-        { id: 'asr', key: 'Asr', name: 'العصر' },
-        { id: 'maghrib', key: 'Maghrib', name: 'المغرب' },
-        { id: 'isha', key: 'Isha', name: 'العشاء' }
+        { id: 'fajr', key: 'Fajr', name: 'الفجر', icon: '🌅' },
+        { id: 'sunrise', key: 'Sunrise', name: 'الشروق', icon: '☀️' },
+        { id: 'dhuhr', key: 'Dhuhr', name: 'الظهر', icon: '🏙️' },
+        { id: 'asr', key: 'Asr', name: 'العصر', icon: '🌇' },
+        { id: 'maghrib', key: 'Maghrib', name: 'المغرب', icon: '🌙' },
+        { id: 'isha', key: 'Isha', name: 'العشاء', icon: '🌌' }
     ];
 
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     let nextPrayer = null;
 
+    // Clear and Redraw to include icons if not in HTML
+    elements.prayerTimesGrid.innerHTML = '';
+
     prayers.forEach(p => {
-        const timeEl = document.getElementById(`${p.id}-time`);
-        const cardEl = document.getElementById(`${p.id}-card`);
         const timeStr = prayerTimes[p.key];
-
-        if (timeEl) timeEl.textContent = timeStr;
-
-        // Calculate minutes from midnight
         const [h, m] = timeStr.split(':').map(Number);
         const prayerMinutes = h * 60 + m;
 
-        if (cardEl) {
-            cardEl.classList.remove('current');
-            if (!nextPrayer && prayerMinutes > currentTime) {
-                nextPrayer = { ...p, minutes: prayerMinutes };
-                cardEl.classList.add('current');
-            }
+        let isCurrent = false;
+        if (!nextPrayer && prayerMinutes > currentTime) {
+            nextPrayer = { ...p, minutes: prayerMinutes };
+            isCurrent = true;
         }
+
+        const card = document.createElement('div');
+        card.className = `prayer-card ${isCurrent ? 'current' : ''}`;
+        card.id = `${p.id}-card`;
+        card.innerHTML = `
+            <span class="prayer-icon">${p.icon}</span>
+            <span class="prayer-name">${p.name}</span>
+            <span class="prayer-time" id="${p.id}-time">${timeStr}</span>
+        `;
+        elements.prayerTimesGrid.appendChild(card);
     });
 
     // Handle case where next prayer is Fajr tomorrow
